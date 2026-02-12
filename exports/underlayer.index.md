@@ -1,5 +1,5 @@
 # Underlayer Export Index
-Generated: 2026-02-12T18:43:18.275Z
+Generated: 2026-02-12T18:44:05.214Z
 
 ## Modules
 - **001** · **InterestShield** (`interestshield`) — LIVE · Time & Latency
