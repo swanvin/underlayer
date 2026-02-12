@@ -33,7 +33,7 @@ export const MODULES: Module[] = [
     status: "SPEC",
     law: { title: "Conservation of Value", statement: "Value rarely disappears. It moves." },
     summary: "Maps value movement across boundaries and detects leakage.",
-    does: ["Builds sourceâ†’sink flow maps", "Measures diffusion vs concentration", "Flags leakage boundaries"],
+    does: ["Builds source→sink flow maps", "Measures diffusion vs concentration", "Flags leakage boundaries"],
     doesNot: ["No recovery actions", "No rerouting", "No advice"],
   },
   {
@@ -73,7 +73,7 @@ export const MODULES: Module[] = [
     status: "SPEC",
     law: { title: "Alignment", statement: "Systems optimize what they measure." },
     summary: "Audits metric-to-behavior mapping and incentive drift.",
-    does: ["Maps metricsâ†’behavior", "Surfaces divergence", "Flags hidden optimization"],
+    does: ["Maps metrics→behavior", "Surfaces divergence", "Flags hidden optimization"],
     doesNot: ["No governance enforcement", "No policy changes", "No advice"],
   },
 
