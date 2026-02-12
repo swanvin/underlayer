@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-02-12T18:10:09.897Z",
+  "routes": [
+    "/",
+    "/modules",
+    "/modules/interestshield",
+    "/modules/entropyshield",
+    "/modules/flowshield",
+    "/modules/compound",
+    "/modules/ignite",
+    "/modules/loop",
+    "/modules/align",
+    "/modules/scarcitylens",
+    "/modules/friction",
+    "/modules/latency"
+  ]
+}

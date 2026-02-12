@@ -1,0 +1,112 @@
+[
+  {
+    "id": "001",
+    "slug": "interestshield",
+    "name": "InterestShield",
+    "status": "LIVE",
+    "law": {
+      "title": "Time & Latency",
+      "statement": "Delay changes outcomes. Costs compound quietly."
+    },
+    "route": "/modules/interestshield"
+  },
+  {
+    "id": "002",
+    "slug": "entropyshield",
+    "name": "EntropyShield",
+    "status": "SPEC",
+    "law": {
+      "title": "Entropy",
+      "statement": "Without intervention, disorder increases."
+    },
+    "route": "/modules/entropyshield"
+  },
+  {
+    "id": "003",
+    "slug": "flowshield",
+    "name": "FlowShield",
+    "status": "SPEC",
+    "law": {
+      "title": "Conservation of Value",
+      "statement": "Value rarely disappears. It moves."
+    },
+    "route": "/modules/flowshield"
+  },
+  {
+    "id": "004",
+    "slug": "compound",
+    "name": "Compound",
+    "status": "SPEC",
+    "law": {
+      "title": "Compounding",
+      "statement": "Repeated inputs outweigh intense inputs."
+    },
+    "route": "/modules/compound"
+  },
+  {
+    "id": "005",
+    "slug": "ignite",
+    "name": "Ignite",
+    "status": "SPEC",
+    "law": {
+      "title": "Inertia",
+      "statement": "Systems resist change until acted on."
+    },
+    "route": "/modules/ignite"
+  },
+  {
+    "id": "006",
+    "slug": "loop",
+    "name": "Loop",
+    "status": "SPEC",
+    "law": {
+      "title": "Feedback",
+      "statement": "Outputs become inputs."
+    },
+    "route": "/modules/loop"
+  },
+  {
+    "id": "007",
+    "slug": "align",
+    "name": "Align",
+    "status": "SPEC",
+    "law": {
+      "title": "Alignment",
+      "statement": "Systems optimize what they measure."
+    },
+    "route": "/modules/align"
+  },
+  {
+    "id": "008",
+    "slug": "scarcitylens",
+    "name": "ScarcityLens",
+    "status": "SPEC",
+    "law": {
+      "title": "Scarcity",
+      "statement": "Constraints create price, behavior, and strategy."
+    },
+    "route": "/modules/scarcitylens"
+  },
+  {
+    "id": "009",
+    "slug": "friction",
+    "name": "Friction",
+    "status": "SPEC",
+    "law": {
+      "title": "Friction",
+      "statement": "Resistance reveals cost, inefficiency, and leverage."
+    },
+    "route": "/modules/friction"
+  },
+  {
+    "id": "010",
+    "slug": "latency",
+    "name": "Latency",
+    "status": "SPEC",
+    "law": {
+      "title": "Latency",
+      "statement": "Delay converts intent into loss."
+    },
+    "route": "/modules/latency"
+  }
+]
