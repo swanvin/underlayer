@@ -14,7 +14,7 @@ type Block =
 function inline(text: string) {
   // very small inline formatting: **bold**, `code`
   const parts: Array<{ k: "text" | "b" | "code"; v: string }> = [];
-  let s = text;
+  const s = text;
 
   // split by backticks first
   const segs = s.split(/`/g);
@@ -80,7 +80,7 @@ function parse(md: string): Block[] {
     const t = line.trim();
 
     if (!t) continue;
-    if (t === "---" || t === "⸻") {
+    if (t === "---" || t === "â¸»") {
       blocks.push({ t: "hr" });
       continue;
     }
@@ -98,7 +98,7 @@ function parse(md: string): Block[] {
       continue;
     }
 
-    if (t.startsWith("- ") || t.startsWith("• ")) {
+    if (t.startsWith("- ") || t.startsWith("â€¢ ")) {
       blocks.push({ t: "li", text: t.slice(2).trim() });
       continue;
     }
@@ -120,7 +120,7 @@ export default function UnderlayerPage() {
 
   return (
     <Container>
-      <div className="text-xs text-neutral-500">UNDERLAYER · INTERNAL STANDARD</div>
+      <div className="text-xs text-neutral-500">UNDERLAYER Â· INTERNAL STANDARD</div>
       <div className="mt-2 text-3xl">Underlayer v1.0</div>
       <div className="mt-2 text-sm text-neutral-400">
         Internal doctrine. Definitions first. Tools later.
@@ -128,10 +128,10 @@ export default function UnderlayerPage() {
 
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
         <Link className="underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/modules">
-          View Modules →
+          View Modules â†’
         </Link>
         <Link className="underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/">
-          Home →
+          Home â†’
         </Link>
       </div>
 

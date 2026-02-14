@@ -2,6 +2,7 @@ import Container from "@/components/Container";
 import RuleLine from "@/components/RuleLine";
 import Link from "next/link";
 import { listModules } from "@/lib/modules/registry";
+import type { Module } from "@/lib/modules/types";
 
 function StatusPill({ status }: { status: string }) {
   const s = String(status || "SPEC").toUpperCase();
@@ -25,7 +26,7 @@ export default function ModulesIndex() {
 
   return (
     <Container>
-      <div className="text-xs text-neutral-500">UNDERLAYER · MODULE INDEX</div>
+      <div className="text-xs text-neutral-500">UNDERLAYER ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· MODULE INDEX</div>
       <div className="mt-2 text-3xl">Modules</div>
       <div className="mt-2 text-sm text-neutral-400">
         Definitions first. Tools later.
@@ -34,7 +35,7 @@ export default function ModulesIndex() {
       <RuleLine />
 
       <div className="grid gap-3">
-        {mods.map((m: any) => {
+        {mods.map((m: Module) => {
           const isLive = String(m.status).toUpperCase() === "LIVE";
           const hasRoute = !!m.route && String(m.route).trim().length > 0;
 
@@ -48,7 +49,7 @@ export default function ModulesIndex() {
                   <div className="flex items-baseline gap-2">
                     <span className="text-xs text-neutral-500">MODULE</span>
                     <span className="font-mono text-xs text-neutral-300">{m.id}</span>
-                    <span className="text-neutral-700">·</span>
+                    <span className="text-neutral-700">ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·</span>
                     <Link
                       href={`/modules/${m.slug}`}
                       className="truncate text-sm text-neutral-100 underline underline-offset-4 decoration-white/20 hover:decoration-white/60"
@@ -58,7 +59,7 @@ export default function ModulesIndex() {
                   </div>
 
                   <div className="mt-1 text-xs text-neutral-500">
-                    {m.law?.title ? m.law.title : "—"}
+                    {m.law?.title ? m.law.title : "ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â"}
                   </div>
 
                   {m.summary ? (
@@ -81,11 +82,10 @@ export default function ModulesIndex() {
 
                 {isLive && hasRoute ? (
                   <Link
-                    href={m.route}
+                    href={m.route!}
                     className="text-xs text-emerald-200 underline underline-offset-4 decoration-emerald-400/30 hover:decoration-emerald-400/70"
                   >
-                    Open tool →
-                  </Link>
+                    Open tool →</Link>
                 ) : (
                   <span className="text-xs text-neutral-600">Definition only</span>
                 )}
@@ -98,7 +98,7 @@ export default function ModulesIndex() {
       <RuleLine />
 
       <div className="text-xs text-neutral-600">
-        SPEC = defined · LIVE = executable · COMING = visible, sealed
+        SPEC = defined ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· LIVE = executable ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· COMING = visible, sealed
       </div>
     </Container>
   );

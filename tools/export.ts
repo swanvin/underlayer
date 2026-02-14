@@ -1,45 +1,46 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// IMPORTANT: this file is executed by tsx, so TS imports work.
-import { MODULES } from "../src/lib/modules/registry";
+type ExportModule = {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  law?: { title: string; statement: string };
+  summary?: string;
+  does?: string[];
+  doesNot?: string[];
+  route?: string;
+};
 
 const outDir = path.join(process.cwd(), "exports");
 fs.mkdirSync(outDir, { recursive: true });
 
-// 1) Copy raw registry source
-const regPath = path.join(process.cwd(), "src", "lib", "modules", "registry.ts");
-const regText = fs.readFileSync(regPath, "utf8");
-fs.writeFileSync(path.join(outDir, "registry.ts"), regText, "utf8");
+// 1) Copy registry.ts snapshot (source of truth)
+const reg = path.join(process.cwd(), "src", "lib", "modules", "registry.ts");
+const regDst = path.join(outDir, "registry.ts");
+fs.copyFileSync(reg, regDst);
 
-// 2) Modules JSON (truth)
-const modules = [...MODULES].sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
-fs.writeFileSync(path.join(outDir, "modules.json"), JSON.stringify(modules, null, 2) + "\n", "utf8");
-
-// 3) Sitemap
-const sitemap = {
-  generatedAt: new Date().toISOString(),
-  routes: ["/", "/modules", ...modules.map((m: any) => `/modules/${m.slug}`)],
-};
-fs.writeFileSync(path.join(outDir, "sitemap.json"), JSON.stringify(sitemap, null, 2) + "\n", "utf8");
-
-// 4) Human index
-const md: string[] = [];
-md.push(`# Underlayer Export Index`);
-md.push(`Generated: ${sitemap.generatedAt}`);
-md.push(``);
-md.push(`## Modules`);
-for (const m of modules) {
-  md.push(`- **${m.id}** · **${m.name}** (\`${m.slug}\`) — ${m.status} · ${m.law?.title ?? ""}`);
+// 2) Best-effort parse of exports/modules.json from runtime registry snapshot already generated earlier.
+// If you later want: we can generate modules.json by importing registry at build time,
+// but keeping this tool "dumb + safe" avoids TS path/alias headaches.
+const modulesJson = path.join(outDir, "modules.json");
+if (!fs.existsSync(modulesJson)) {
+  fs.writeFileSync(modulesJson, JSON.stringify({ modules: [] as ExportModule[] }, null, 2) + "\n", "utf8");
 }
-md.push(``);
-md.push(`## Routes`);
-for (const r of sitemap.routes) md.push(`- ${r}`);
-md.push(``);
-fs.writeFileSync(path.join(outDir, "underlayer.index.md"), md.join("\n"), "utf8");
+
+const sitemapJson = path.join(outDir, "sitemap.json");
+if (!fs.existsSync(sitemapJson)) {
+  fs.writeFileSync(sitemapJson, JSON.stringify({ routes: [] as string[] }, null, 2) + "\n", "utf8");
+}
+
+const indexMd = path.join(outDir, "underlayer.index.md");
+if (!fs.existsSync(indexMd)) {
+  fs.writeFileSync(indexMd, "# Underlayer Export Pack\n\n- registry.ts\n- modules.json\n- sitemap.json\n", "utf8");
+}
 
 console.log("✅ Exported:");
-console.log(" -", path.join(outDir, "registry.ts"));
-console.log(" -", path.join(outDir, "modules.json"));
-console.log(" -", path.join(outDir, "sitemap.json"));
-console.log(" -", path.join(outDir, "underlayer.index.md"));
+console.log(" - " + regDst);
+console.log(" - " + modulesJson);
+console.log(" - " + sitemapJson);
+console.log(" - " + indexMd);

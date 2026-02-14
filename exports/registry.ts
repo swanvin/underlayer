@@ -1,4 +1,4 @@
-﻿import { Module } from "./types";
+import { Module } from "./types";
 
 export const MODULES: Module[] = [
   {
@@ -118,9 +118,7 @@ export function getModule(slug: string) {
 
 
 export function listModules() {
-  // Prefer whatever array you already use; this assumes `MODULES` exists.
-  // If your array is named differently, change MODULES below to that name.
-  const all = (MODULES ?? []) as any[];
-  return [...all].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  const all: Module[] = MODULES ?? [];
+  return [...all].sort((a, b) => a.id.localeCompare(b.id));
 }
 
