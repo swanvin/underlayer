@@ -1,33 +1,14 @@
 ﻿/** @type {import("next").NextConfig} */
 const nextConfig = {
-  async headers() {
-    const isDev = process.env.NODE_ENV !== "production";
+  productionBrowserSourceMaps: false,
 
-    const cspDev =
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
-      "connect-src 'self' ws: http: https:; " +
-      "img-src 'self' data: blob:; " +
-      "style-src 'self' 'unsafe-inline';";
+  // Silence Next 16 warning when Turbopack is enabled by default
+  turbopack: {},
 
-    const cspProd =
-      "default-src 'self'; " +
-      "script-src 'self'; " +
-      "connect-src 'self' https:; " +
-      "img-src 'self' data:; " +
-      "style-src 'self' 'unsafe-inline';";
-
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: isDev ? cspDev : cspProd,
-          },
-        ],
-      },
-    ];
+  // Keep devtools off in webpack mode
+  webpack: (config) => {
+    config.devtool = false;
+    return config;
   },
 };
 
