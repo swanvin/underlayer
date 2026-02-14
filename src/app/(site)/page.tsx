@@ -15,20 +15,21 @@ export default function SiteHome() {
 
       <div className="flex flex-wrap gap-3 text-xs">
         <Link className="underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/modules">
-          Modules →
+          Modules â†’
         </Link>
         <Link className="underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/underlayer">
-          Internal Standard →
+          Internal Standard â†’
         </Link>
         <Link className="underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/exports">
-          Exports →
+          Exports â†’
         </Link>
+            <Link className="text-sm underline underline-offset-4 text-neutral-300 decoration-white/15 hover:decoration-white/50" href="/health/ui">Health →</Link>
       </div>
 
       <RuleLine />
 
       <div className="text-xs text-neutral-600">
-        SPEC = defined · LIVE = executable · COMING = visible, sealed
+        SPEC = defined Â· LIVE = executable Â· COMING = visible, sealed
       </div>
     </Container>
   );
