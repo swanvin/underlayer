@@ -1,31 +1,37 @@
 {
-  "name": "underlayer",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "underlayer:export": "pnpm exec tsx tools/export.ts",
-    "underlayer:gate": "pnpm i && pnpm run underlayer:export && pnpm run lint && pnpm run build"
-  },
-  "dependencies": {
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5"
-  }
+    "name":  "underlayer",
+    "version":  "0.1.0",
+    "private":  true,
+    "scripts":  {
+                    "dev":  "next dev --webpack",
+                    "dev:turbo":  "next dev --turbo",
+                    "build":  "next build",
+                    "start":  "next start",
+                    "lint":  "eslint",
+                    "underlayer:export":  "pnpm exec tsx tools/export.ts",
+                    "underlayer:gate":  "pnpm i \u0026\u0026 pnpm run underlayer:export \u0026\u0026 pnpm run lint \u0026\u0026 pnpm run build",
+                    "underlayer:check":  "pnpm run lint \u0026\u0026 pnpm run build",
+                    "underlayer:ready":  "pnpm run underlayer:gate \u0026\u0026 git diff --quiet \u0026\u0026 git diff --cached --quiet \u0026\u0026 echo OK_READY_TO_TAG || (echo WORKTREE_DIRTY \u0026\u0026 exit 1)",
+                    "underlayer:release:patch":  "node tools/release.mjs patch",
+                    "underlayer:release:minor":  "node tools/release.mjs minor",
+                    "underlayer:release:major":  "node tools/release.mjs major"
+                },
+    "dependencies":  {
+                         "next":  "16.1.1",
+                         "react":  "19.2.3",
+                         "react-dom":  "19.2.3"
+                     },
+    "devDependencies":  {
+                            "@eslint/eslintrc":  "^3.3.3",
+                            "@tailwindcss/postcss":  "^4",
+                            "@types/node":  "^20",
+                            "@types/react":  "^19",
+                            "@types/react-dom":  "^19",
+                            "eslint":  "^9",
+                            "eslint-config-next":  "16.1.1",
+                            "tailwindcss":  "^4",
+                            "ts-node":  "^10.9.2",
+                            "tsx":  "^4.21.0",
+                            "typescript":  "^5"
+                        }
 }
