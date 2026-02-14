@@ -11,49 +11,102 @@ function out(cmd) {
 
 const bump = process.argv[2] ?? "patch"; // patch|minor|major
 if (!["patch", "minor", "major"].includes(bump)) {
-  console.error('Usage: node tools/release.mjs [patch|minor|major]');
+  console.error("Usage: node tools/release.mjs [patch|minor|major]");
   process.exit(1);
 }
 
-const status = out("git status --porcelain");
-if (status) {
-  console.error("❌ Working tree not clean. Commit or stash first.");
+function requireCleanWorktree(where = "preflight") {
+  const status = out("git status --porcelain");
+  if (status) {
+    console.error(`[${where}] WORKTREE_DIRTY`);
+    console.error(status);
+    process.exit(1);
+  }
+}
+
+function parseSemver(v) {
+  const [maj, min, pat] = String(v ?? "0.0.0")
+    .split(".")
+    .map((n) => parseInt(n, 10));
+  return {
+    maj: Number.isFinite(maj) ? maj : 0,
+    min: Number.isFinite(min) ? min : 0,
+    pat: Number.isFinite(pat) ? pat : 0,
+  };
+}
+
+function bumpSemver(cur, kind) {
+  const next = { ...cur };
+  if (kind === "patch") next.pat += 1;
+  if (kind === "minor") {
+    next.min += 1;
+    next.pat = 0;
+  }
+  if (kind === "major") {
+    next.maj += 1;
+    next.min = 0;
+    next.pat = 0;
+  }
+  return next;
+}
+
+function tagExists(tag) {
+  try {
+    out(`git rev-parse -q --verify "refs/tags/${tag}"`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function currentBranch() {
+  return out("git rev-parse --abbrev-ref HEAD");
+}
+
+// --- AUTHORITY PRE-FLIGHT ---
+requireCleanWorktree("preflight");
+const branch = currentBranch();
+if (branch !== "main") {
+  console.error(`[preflight] Must release from main (current: ${branch})`);
   process.exit(1);
 }
 
-const pkgPath = "package.json";
-const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-
-const [maj, min, pat] = String(pkg.version ?? "0.0.0")
-  .split(".")
-  .map((n) => parseInt(n, 10));
-
-let next = { maj, min, pat };
-if (bump === "patch") next.pat += 1;
-if (bump === "minor") { next.min += 1; next.pat = 0; }
-if (bump === "major") { next.maj += 1; next.min = 0; next.pat = 0; }
-
-const newVer = `${next.maj}.${next.min}.${next.pat}`;
-pkg.version = newVer;
-fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
-
-console.log(`✅ version -> ${newVer}`);
-
-// Gate must pass before tagging stable
+// --- QUALITY GATE (must pass) ---
+console.log("[gate] pnpm run underlayer:gate");
 sh("pnpm run underlayer:gate");
 
-// Commit version bump only (keeps releases traceable)
-sh('git add package.json pnpm-lock.yaml');
+// Ensure exports pack is generated and committed (export runs inside gate, but we guard anyway)
+console.log("[guard] exports pack must be up-to-date and committed");
+requireCleanWorktree("post-gate");
+
+// --- VERSION BUMP ---
+const pkgPath = "package.json";
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+const cur = parseSemver(pkg.version);
+const next = bumpSemver(cur, bump);
+const newVer = `${next.maj}.${next.min}.${next.pat}`;
+
+const tag = `underlayer-v${newVer}`;
+if (tagExists(tag)) {
+  console.error(`[version] Tag already exists: ${tag}`);
+  process.exit(1);
+}
+
+pkg.version = newVer;
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+console.log(`[version] package.json -> ${newVer}`);
+
+// --- COMMIT VERSION BUMP ---
+sh(`git add "${pkgPath}"`);
 sh(`git commit -m "Release: v${newVer}"`);
 
-// Tag immutable version + move stable
-const tag = `underlayer-v${newVer}`;
+// --- TAG + PUSH ---
 sh(`git tag ${tag}`);
-sh("git tag -f underlayer-stable");
-
-// Push
-sh("git push origin main");
+sh(`git push origin main`);
 sh(`git push origin ${tag}`);
-sh("git push -f origin underlayer-stable");
 
-console.log(`✅ Released ${tag} + moved underlayer-stable`);
+// --- MOVE STABLE TAG (FORCE UPDATE) ---
+sh(`git tag -f underlayer-stable`);
+sh(`git push -f origin underlayer-stable`);
+
+console.log(`[ok] Released ${tag} (and moved underlayer-stable)`);
