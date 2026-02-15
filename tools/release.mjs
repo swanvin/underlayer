@@ -1,4 +1,4 @@
-// tools/release.mjs
+﻿// tools/release.mjs
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
@@ -110,3 +110,4 @@ sh(`git tag -f underlayer-stable`);
 sh(`git push -f origin underlayer-stable`);
 
 console.log(`[ok] Released ${tag} (and moved underlayer-stable)`);
+
