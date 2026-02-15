@@ -5,85 +5,79 @@ import { execSync } from "node:child_process";
 function sh(cmd) {
   execSync(cmd, { stdio: "inherit" });
 }
+
 function out(cmd) {
   return execSync(cmd, { stdio: ["ignore", "pipe", "pipe"] }).toString().trim();
 }
-function fail(msg) {
+
+function die(msg) {
   console.error(`⛔ ${msg}`);
   process.exit(1);
 }
-function ensureCleanOrFail() {
-  const s = out("git status --porcelain");
-  if (s) {
-    console.error("⛔ Working tree not clean:");
-    console.error(s);
-    process.exit(1);
-  }
-}
-function parseSemver(v) {
-  const m = String(v || "").trim().match(/^(\d+)\.(\d+)\.(\d+)$/);
-  if (!m) return null;
-  return { maj: Number(m[1]), min: Number(m[2]), pat: Number(m[3]) };
-}
-function bumpVersion(cur, bump) {
-  const p = parseSemver(cur) ?? { maj: 0, min: 0, pat: 0 };
-  const next = { ...p };
-  if (bump === "patch") next.pat += 1;
-  if (bump === "minor") { next.min += 1; next.pat = 0; }
-  if (bump === "major") { next.maj += 1; next.min = 0; next.pat = 0; }
-  return `${next.maj}.${next.min}.${next.pat}`;
-}
 
-// ---- main ----
 const bump = process.argv[2] ?? "patch"; // patch|minor|major
 if (!["patch", "minor", "major"].includes(bump)) {
-  fail("Usage: node tools/release.mjs [patch|minor|major]");
+  die('Usage: node tools/release.mjs [patch|minor|major]');
 }
 
-// Deliberate authority: releases only from main
-const branch = out("git rev-parse --abbrev-ref HEAD");
-if (branch !== "main") {
-  fail(`Releases must be run from main. Current branch: ${branch}`);
+// 0) Must start clean
+const pre = out("git status --porcelain");
+if (pre) {
+  console.error("⛔ Working tree not clean:\n" + pre);
+  process.exit(1);
 }
 
-// Pre-check: must start clean
-ensureCleanOrFail();
-
-// Bump version
 const pkgPath = "package.json";
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-const curVer = String(pkg.version ?? "0.0.0");
-const newVer = bumpVersion(curVer, bump);
-pkg.version = newVer;
 
-// Write canonical JSON (LF + newline)
-fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
-console.log(`✅ version: ${curVer} -> ${newVer}`);
+const [maj0, min0, pat0] = String(pkg.version ?? "0.0.0")
+  .split(".")
+  .map((n) => parseInt(n, 10));
 
-// Commit version bump
-sh("git add package.json");
-const staged = out("git diff --cached --name-only");
-if (!staged) fail("No staged changes after version bump. Aborting.");
-sh(`git commit -m "Release: v${newVer}"`);
-
-// Gate must be deterministic; if it dirties the tree, release fails (correct behavior)
-sh("pnpm run underlayer:ready");
-
-// Tags
-const vTag = `underlayer-v${newVer}`;
-const stableTag = "underlayer-stable";
-
-// Never move version tags; only stable is movable
-if (out(`git tag --list "${vTag}"`)) {
-  fail(`${vTag} already exists. Choose a different bump (or delete intentionally).`);
+let next = { maj: maj0 || 0, min: min0 || 0, pat: pat0 || 0 };
+if (bump === "patch") next.pat += 1;
+if (bump === "minor") {
+  next.min += 1;
+  next.pat = 0;
+}
+if (bump === "major") {
+  next.maj += 1;
+  next.min = 0;
+  next.pat = 0;
 }
 
-sh(`git tag ${vTag}`);
-sh(`git tag -f ${stableTag}`);
+const newVer = `${next.maj}.${next.min}.${next.pat}`;
+const tag = `underlayer-v${newVer}`;
 
-// Push
+pkg.version = newVer;
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+
+console.log(`✅ version -> ${newVer}`);
+
+// 1) Run the full gate (export + lint + build)
+sh("pnpm run underlayer:gate");
+
+// 2) Stage all changes created by gate + version bump
+// (exports pack is expected to update here)
+sh("git add -A");
+
+// 3) If still dirty, fail with details (should not happen after add -A)
+const mid = out("git status --porcelain");
+if (mid) {
+  console.error("⛔ Still dirty after staging:\n" + mid);
+  process.exit(1);
+}
+
+// 4) Commit release
+sh(`git commit -m "Release: ${tag}"`);
+
+// 5) Tag release + move stable tag
+sh(`git tag -f ${tag}`);
+sh(`git tag -f underlayer-stable`);
+
+// 6) Push main and tags
 sh("git push origin main");
-sh(`git push origin ${vTag}`);
-sh(`git push -f origin ${stableTag}`);
+sh(`git push -f origin ${tag}`);
+sh("git push -f origin underlayer-stable");
 
-console.log(`✅ released: ${vTag} (and updated ${stableTag})`);
+console.log(`✅ released ${tag} (and moved underlayer-stable)`);
