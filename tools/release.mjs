@@ -8,12 +8,14 @@
  *   node tools/release.mjs major
  *
  * What it does:
- *   - requires clean worktree
+ *   - requires fully clean repo (no staged/unstaged) before starting
  *   - runs pnpm run underlayer:gate
  *   - bumps package.json version
  *   - writes package.json as UTF-8 (no BOM) with LF newlines
  *   - stages package.json (+ pnpm-lock.yaml if changed)
- *   - commits, tags, moves underlayer-stable, pushes
+ *   - runs gate again
+ *   - stages any generated changes (exports, etc.)
+ *   - commits, tags underlayer-vX.Y.Z, force-moves underlayer-stable, pushes
  */
 
 import fs from "node:fs";
@@ -25,17 +27,28 @@ function sh(cmd) {
 function out(cmd) {
   return execSync(cmd, { stdio: ["ignore", "pipe", "pipe"] }).toString().trim();
 }
-
 function die(msg) {
   console.error(msg);
   process.exit(1);
 }
 
-function requireClean(label = "Working tree not clean") {
-  const s = out("git status --porcelain");
-  if (s) {
-    console.error(`⛔ ${label}:\n${s}`);
-    process.exit(1);
+function statusPorcelain(path = "") {
+  const cmd = path ? `git status --porcelain ${path}` : "git status --porcelain";
+  return out(cmd);
+}
+
+function requireFullyClean(label = "Working tree not clean") {
+  const s = statusPorcelain();
+  if (s) die(`⛔ ${label}:\n${s}`);
+}
+
+function requireNoUnstaged(label = "Unstaged changes remain") {
+  // exit code 1 if there are unstaged changes
+  try {
+    execSync("git diff --quiet", { stdio: "ignore" });
+  } catch {
+    const s = statusPorcelain();
+    die(`⛔ ${label}:\n${s}`);
   }
 }
 
@@ -54,9 +67,8 @@ function bumpVersion(oldVer, bump) {
 }
 
 function writeJsonLfNoBom(path, obj) {
-  // JSON.stringify uses \n. Ensure LF even on Windows by replacing CRLF.
   const json = JSON.stringify(obj, null, 2).replace(/\r\n/g, "\n") + "\n";
-  fs.writeFileSync(path, json, { encoding: "utf8" }); // Node writes UTF-8 without BOM.
+  fs.writeFileSync(path, json, { encoding: "utf8" }); // UTF-8 no BOM
 }
 
 const bump = process.argv[2] ?? "patch"; // patch|minor|major
@@ -64,11 +76,11 @@ if (!["patch", "minor", "major"].includes(bump)) {
   die("Usage: node tools/release.mjs [patch|minor|major]");
 }
 
-requireClean();
+requireFullyClean();
 
 console.log("🔒 Gate (pre-bump)...");
 sh("pnpm run underlayer:gate");
-requireClean("Dirty after pre-bump gate (exports or tooling changed)");
+requireFullyClean("Dirty after pre-bump gate (exports or tooling changed)");
 
 const pkgPath = "package.json";
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
@@ -78,31 +90,28 @@ const newVer = bumpVersion(oldVer, bump);
 pkg.version = newVer;
 
 writeJsonLfNoBom(pkgPath, pkg);
-
 console.log(`✅ version -> ${newVer}`);
 
-// Stage version bump (+ lockfile if it changed due to pnpm)
+// Stage version bump (+ lockfile if changed)
 sh("git add package.json");
-try {
-  const lockStatus = out("git status --porcelain pnpm-lock.yaml");
-  if (lockStatus) sh("git add pnpm-lock.yaml");
-} catch { /* ignore */ }
+const lockStatus = statusPorcelain("pnpm-lock.yaml");
+if (lockStatus) sh("git add pnpm-lock.yaml");
 
 console.log("🔒 Gate (post-bump)...");
 sh("pnpm run underlayer:gate");
 
-// If gate changed exports again, stage them too (since they are generated)
-const post = out("git status --porcelain");
-if (post) {
-  // If anything changed, stage it all (release commits should be self-contained)
-  sh("git add -A");
-}
+// Stage any generated changes (exports, etc.)
+const post = statusPorcelain();
+if (post) sh("git add -A");
 
-requireClean("Dirty after staging (unexpected)");
+// IMPORTANT: allow staged changes, but no *unstaged* changes
+requireNoUnstaged("Unstaged changes remain after staging (unexpected)");
 
+// Commit
 const msg = `chore(release): v${newVer}`;
 sh(`git commit -m "${msg}"`);
 
+// Tag + stable pointer
 const tagVer = `underlayer-v${newVer}`;
 console.log(`🏷️  Tagging ${tagVer} + moving underlayer-stable...`);
 sh(`git tag ${tagVer}`);
