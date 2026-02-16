@@ -14,7 +14,8 @@
                     "underlayer:ready":  "node -e \"const {execSync}=require(\u0027child_process\u0027); const sh=(c)=\u003eexecSync(c,{stdio:\u0027inherit\u0027}); const out=(c)=\u003eexecSync(c,{stdio:[\u0027ignore\u0027,\u0027pipe\u0027,\u0027pipe\u0027]}).toString().trim(); sh(\u0027pnpm run underlayer:gate\u0027); const s=out(\u0027git status --porcelain\u0027); if(s){ console.error(\u0027WORKTREE_DIRTY\u0027); process.exit(1);} console.log(\u0027OK_READY_TO_TAG\u0027);\"",
                     "underlayer:release:patch":  "node tools/release.mjs patch",
                     "underlayer:release:minor":  "node tools/release.mjs minor",
-                    "underlayer:release:major":  "node tools/release.mjs major"
+                    "underlayer:release:major":  "node tools/release.mjs major",
+                    "underlayer:release":  "pnpm run underlayer:release:patch"
                 },
     "dependencies":  {
                          "next":  "16.1.1",
